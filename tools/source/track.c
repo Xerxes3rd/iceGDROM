@@ -470,11 +470,11 @@ bool track_data_from_filename(struct track *t, enum track_type type, uint32_t se
       msg_perror(filename_copy);
       return false;
     }
-    if (flen < offset) {
+    if (flen < (long)offset) {
       msg_error("File offset is beyond EOF\n");
       return false;
     }
-    t->data_count = (flen - offset) / secsize;
+    t->data_count = (flen - (long)offset) / (long)secsize;
   } else
     t->data_count = count;
   return true;

@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <ctype.h>
+#include <stdlib.h>
 
 #include "msg.h"
 #include "track.h"
@@ -20,16 +21,22 @@ bool gdi_check_file(FILE *f)
 
 bool gdi_parse_and_add_tracks(FILE *f, const char *fn)
 {
+  bool retval = true;
   unsigned num_tracks;
+#ifdef WIN32
+  const char *slash = strrchr(fn, '\\');
+#else
   const char *slash = strrchr(fn, '/');
-  unsigned dirlen = (slash? slash-fn+1 : 0);
+#endif
+  const unsigned dirlen = (slash? slash-fn+1 : 0);
+  char *filename = (char *)malloc((dirlen + 101) * sizeof(char));
   if (1 != fscanf(f, "%u", &num_tracks)) {
     msg_error("Failed to parse GDI file (track number line)\n");
     return false;
   }
   for (unsigned i = 0; i < num_tracks; i++) {
     unsigned track_no, start, ctrl, secsize, offset;
-    char fnc1, filename[dirlen+101];
+    char fnc1;
     if (5 != fscanf(f, "%u %u %u %u %c",
 		    &track_no, &start, &ctrl, &secsize, &fnc1)) {
       msg_error("Failed to parse GDI file (track %u)\n", i+1);
@@ -69,12 +76,17 @@ bool gdi_parse_and_add_tracks(FILE *f, const char *fn)
     default:
       msg_error("Unsupported sector size %u in GDI file (track %u)\n",
 		secsize, i+1);
-      return false;
+      retval = false;
+	  break;
     }
-    if (!track_data_from_filename(t, type, secsize, filename, offset,
-				  TRACK_SECTOR_COUNT_PROBE))
-      return false;
+	if (!track_data_from_filename(t, type, secsize, filename, offset,
+		TRACK_SECTOR_COUNT_PROBE))
+	{
+		retval = false;
+		break;
+	}
   }
-  return true;
+  free(filename);
+  return retval;
 }
 
