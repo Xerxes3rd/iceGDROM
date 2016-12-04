@@ -28,7 +28,7 @@ bool gdi_parse_and_add_tracks(FILE *f, const char *fn)
 #else
   const char *slash = strrchr(fn, '/');
 #endif
-  const unsigned dirlen = (slash? slash-fn+1 : 0);
+  unsigned dirlen = (slash? slash-fn+1 : 0);
   char *filename = (char *)malloc((dirlen + 101) * sizeof(char));
   if (1 != fscanf(f, "%u", &num_tracks)) {
     msg_error("Failed to parse GDI file (track number line)\n");
